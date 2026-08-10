@@ -50,7 +50,8 @@ visuele kaart-editor — YAML is niet nodig.
 | Optie | Type | Standaard | Omschrijving |
 |---|---|---|---|
 | `language` | string | `nl` | Taalcode: `nl`, `en`, `de`, `fr`, `it`, `es`, `el`, `da`, `sv`, `no`, `ro` |
-| `background_color` | hex kleur | `#101113` | Basiskleur van het klokpaneel; de kaart leidt hier zelf een subtiele gradient van af |
+| `background_mode` | string | `gradient` | `gradient` (aangepaste kleur + subtiel verloop), `theme` (volgt `--ha-card-background`/`--card-background-color` van je HA-thema), of `none` (transparant) |
+| `background_color` | hex kleur | `#101113` | Basiskleur van het klokpaneel; alleen gebruikt bij `background_mode: gradient` |
 | `text_color` | hex kleur | `#ffffff` | Kleur van de opgelichte letters/stippen |
 
 Rand en schaduw van de kaart volgen automatisch het actieve Home

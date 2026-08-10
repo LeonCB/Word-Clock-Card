@@ -629,17 +629,27 @@ LANGS.ro = {
     const darkStop = mix(baseHex, '#000000', dark ? 0.42 : 0.12);
     return `radial-gradient(ellipse at 50% 15%, ${lightStop} 0%, ${midStop} 45%, ${darkStop} 100%)`;
   }
-  // "Uit"-kleur voor letters/stippen: een zachte overgang tussen achtergrond
-  // en tekstkleur, zodat het contrast altijd leesbaar blijft ongeacht de
-  // gekozen combinatie.
-  function dimColor(bgHex, textHex){
-    return mix(bgHex, textHex, 0.24);
+  // "Uit"-kleur voor letters/stippen: de tekstkleur op laag alfa, zodat dit
+  // altijd leesbaar oogt bovenop willekeurige achtergrond — een aangepast
+  // kleurverloop, de thema-achtergrond, of volledige transparantie.
+  function dimRgba(textHex, alpha){
+    const { r, g, b } = hexToRgb(textHex);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  function onGlow(textHex, alpha){
+    const { r, g, b } = hexToRgb(textHex);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   /* ============================== KAART ============================== */
   class WordClockCard extends HTMLElement {
     static getStubConfig(){
-      return { language: 'nl', background_color: DEFAULT_BG, text_color: DEFAULT_TEXT };
+      return {
+        language: 'nl',
+        background_mode: 'gradient',
+        background_color: DEFAULT_BG,
+        text_color: DEFAULT_TEXT
+      };
     }
     static getConfigElement(){
       return document.createElement('word-clock-card-editor');
@@ -648,8 +658,12 @@ LANGS.ro = {
     setConfig(config){
       if (!config) throw new Error('Ongeldige configuratie');
       const language = (config.language && LANGS[config.language]) ? config.language : 'nl';
+      const background_mode = ['gradient', 'theme', 'none'].includes(config.background_mode)
+        ? config.background_mode
+        : 'gradient';
       this._config = {
         language,
+        background_mode,
         background_color: config.background_color || DEFAULT_BG,
         text_color: config.text_color || DEFAULT_TEXT
       };
@@ -755,13 +769,24 @@ LANGS.ro = {
     }
 
     _applyColors(){
-      const { background_color, text_color } = this._config;
-      const gradient = buildGradient(background_color);
-      const dim = dimColor(background_color, text_color);
-      this._els.card.style.setProperty('--ha-card-background', gradient);
-      this._els.card.style.background = gradient;
-      Object.values(this._els.dots).forEach(d => { d.style.background = dim; });
-      this._dimColor = dim;
+      const { background_mode, background_color, text_color } = this._config;
+      const { card } = this._els;
+
+      if (background_mode === 'gradient') {
+        const gradient = buildGradient(background_color);
+        card.style.setProperty('--ha-card-background', gradient);
+        card.style.background = gradient;
+      } else if (background_mode === 'none') {
+        card.style.removeProperty('--ha-card-background');
+        card.style.background = 'transparent';
+      } else {
+        // 'theme': geen inline achtergrond zetten, ha-card gebruikt dan
+        // gewoon var(--ha-card-background, var(--card-background-color)).
+        card.style.removeProperty('--ha-card-background');
+        card.style.removeProperty('background');
+      }
+
+      this._dimColor = dimRgba(text_color, 0.30);
     }
 
     _render(force){
@@ -770,8 +795,14 @@ LANGS.ro = {
         this._buildGrid(this._config.language);
         this._lastLang = this._config.language;
       }
-      if (force || this._lastBg !== this._config.background_color || this._lastText !== this._config.text_color) {
+      if (
+        force ||
+        this._lastBgMode !== this._config.background_mode ||
+        this._lastBg !== this._config.background_color ||
+        this._lastText !== this._config.text_color
+      ) {
         this._applyColors();
+        this._lastBgMode = this._config.background_mode;
         this._lastBg = this._config.background_color;
         this._lastText = this._config.text_color;
       }
@@ -797,7 +828,7 @@ LANGS.ro = {
         for (let c = start; c <= end; c++) {
           const cell = this._cellRefs[row][c];
           cell.style.color = onColor;
-          cell.style.textShadow = `0 0 10px ${onColor}59`;
+          cell.style.textShadow = `0 0 10px ${onGlow(onColor, 0.35)}`;
         }
       });
 
@@ -806,7 +837,7 @@ LANGS.ro = {
         const on = i < extraDots;
         const d = this._els.dots[pos];
         d.style.background = on ? onColor : offColor;
-        d.style.boxShadow = on ? `0 0 6px 1px ${onColor}b3` : 'none';
+        d.style.boxShadow = on ? `0 0 6px 1px ${onGlow(onColor, 0.7)}` : 'none';
       });
     }
   }
@@ -825,10 +856,15 @@ LANGS.ro = {
       const langOptions = Object.keys(LANGS)
         .map(key => `<option value="${key}" ${key === c.language ? 'selected' : ''}>${LANG_NAMES[key] || key.toUpperCase()}</option>`)
         .join('');
+      const bgModeOptions = [
+        ['gradient', 'Kleurverloop (aangepast)'],
+        ['theme', 'Standaard thema-achtergrond'],
+        ['none', 'Geen (transparant)']
+      ].map(([val, label]) => `<option value="${val}" ${val === c.background_mode ? 'selected' : ''}>${label}</option>`).join('');
 
       this.shadowRoot.innerHTML = `
         <style>
-          .row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; }
+          .row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; gap: 12px; }
           .row + .row { border-top: 1px solid var(--divider-color, #e0e0e0); }
           label { font-size:14px; color: var(--primary-text-color, #222); }
           select {
@@ -842,6 +878,7 @@ LANGS.ro = {
             width:44px; height:32px; padding:0; border:1px solid var(--divider-color, #ccc);
             border-radius:6px; background:none; cursor:pointer;
           }
+          .row.hidden { display:none; }
           .wrap { padding: 4px 8px; }
         </style>
         <div class="wrap">
@@ -850,6 +887,10 @@ LANGS.ro = {
             <select id="language">${langOptions}</select>
           </div>
           <div class="row">
+            <label>Achtergrond</label>
+            <select id="background_mode">${bgModeOptions}</select>
+          </div>
+          <div class="row ${c.background_mode === 'gradient' ? '' : 'hidden'}" id="row_background_color">
             <label>Achtergrondkleur</label>
             <input type="color" id="background_color" value="${c.background_color}">
           </div>
@@ -860,6 +901,9 @@ LANGS.ro = {
         </div>
       `;
 
+      this.shadowRoot.getElementById('background_mode').addEventListener('change', (e) => {
+        this._update({ background_mode: e.target.value });
+      });
       this.shadowRoot.getElementById('language').addEventListener('change', (e) => {
         this._update({ language: e.target.value });
       });
