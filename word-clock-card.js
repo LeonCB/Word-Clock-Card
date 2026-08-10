@@ -687,6 +687,8 @@ LANGS.ro = {
           aspect-ratio: 1 / 1;
           padding: 9% 8%;
           box-sizing: border-box;
+          container-type: inline-size;
+          container-name: wordclock;
         }
         .dot {
           position:absolute; width: 1.6%; height: 1.6%; min-width:5px; min-height:5px;
@@ -701,10 +703,17 @@ LANGS.ro = {
         }
         .cell {
           display:flex; align-items:center; justify-content:center; font-weight:700;
-          font-size: clamp(11px, 4.4vw, 32px);
+          font-size: clamp(9px, 4.4vw, 34px);
           transition: color 0.5s ease, text-shadow 0.5s ease;
           user-select:none;
           font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        /* Schaal de letters met de werkelijke breedte van de kaart (niet het
+           browservenster), zodat de tekst ook in smalle dashboard-kolommen
+           of naast andere kaarten netjes past. vw hierboven is de fallback
+           voor browsers zonder container query-ondersteuning. */
+        @container wordclock (min-width: 0px) {
+          .cell { font-size: clamp(9px, 5cqw, 34px); }
         }
       `;
       const card = document.createElement('ha-card');
