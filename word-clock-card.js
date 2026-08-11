@@ -727,7 +727,7 @@ LANGS.ro = {
            of naast andere kaarten netjes past. vw hierboven is de fallback
            voor browsers zonder container query-ondersteuning. */
         @container wordclock (min-width: 0px) {
-          .cell { font-size: clamp(9px, 5cqw, 34px); }
+          .cell { font-size: 5cqw; }
         }
       `;
       const card = document.createElement('ha-card');
