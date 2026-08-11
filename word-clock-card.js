@@ -86,7 +86,7 @@ LANGS.en = {
   ],
   seg: {
     IT:[0,0,1], IS:[0,3,4],
-    QUARTER:[1,2,8],
+    A_QUARTER:[1,0,0], QUARTER:[1,2,8],
     TWENTY:[2,0,5], MIN_FIVE:[2,6,9],
     HALF:[3,0,3], MIN_TEN:[3,5,7], TO:[3,9,10],
     PAST:[4,0,3], NINE:[4,7,10],
@@ -106,13 +106,13 @@ LANGS.en = {
       case 0: segs.push(this.hourWord[h12], 'OCLOCK'); break;
       case 1: segs.push('MIN_FIVE','PAST', this.hourWord[h12]); break;
       case 2: segs.push('MIN_TEN','PAST', this.hourWord[h12]); break;
-      case 3: segs.push('QUARTER','PAST', this.hourWord[h12]); break;
+      case 3: segs.push('A_QUARTER','QUARTER','PAST', this.hourWord[h12]); break;
       case 4: segs.push('TWENTY','PAST', this.hourWord[h12]); break;
       case 5: segs.push('TWENTY','MIN_FIVE','PAST', this.hourWord[h12]); break;
       case 6: segs.push('HALF','PAST', this.hourWord[h12]); break;
       case 7: segs.push('TWENTY','MIN_FIVE','TO', this.hourWord[next]); break;
       case 8: segs.push('TWENTY','TO', this.hourWord[next]); break;
-      case 9: segs.push('QUARTER','TO', this.hourWord[next]); break;
+      case 9: segs.push('A_QUARTER','QUARTER','TO', this.hourWord[next]); break;
       case 10: segs.push('MIN_TEN','TO', this.hourWord[next]); break;
       case 11: segs.push('MIN_FIVE','TO', this.hourWord[next]); break;
     }
